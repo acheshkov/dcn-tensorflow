@@ -73,7 +73,7 @@ def word2vec(word):
     try:
         res = np.array(embeddings[removePadding(word).decode()], dtype=float)
     except:
-        print("err", removePadding(word).decode())
+        #print("err", removePadding(word).decode())
         res = np.array([0.0 for x in range(0, 300)], dtype=float)
     return res
 
