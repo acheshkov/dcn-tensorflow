@@ -20,7 +20,7 @@ Args:
 Returns:
     tensor of shape (1, document_size) of scores
 '''
-def HMN(U, h_i, u_s_i, u_e_i, doc_size, scope = None, FLAGS = None):
+def HMN(U, h_i, u_s_i, u_e_i, doc_size, scope = None, FLAGS = None, iter_number=-1):
     maxout_pooling_size = FLAGS.maxout_pooling_size
     lstm_size = FLAGS.lstm_size
     #doc_size = tf.shape(U)[1]
@@ -36,10 +36,11 @@ def HMN(U, h_i, u_s_i, u_e_i, doc_size, scope = None, FLAGS = None):
     B_3 = tf.reshape(tf.tile(b_3, [doc_size]), [maxout_pooling_size, doc_size])
     w_3 = ut.get_scope_variable(scope, 'hmn_w_3', [maxout_pooling_size, 1, 2 * lstm_size])
     
-    tf.summary.histogram(scope + '/hmn_b_1', b_1)
-    tf.summary.histogram(scope + '/hmn_w_1', w_1)
-    tf.summary.histogram(scope + '/hmn_w_d', w_d)
-    tf.summary.histogram(scope + '/hmn_w_3', w_3)
+    if iter_number == 3:
+        tf.summary.histogram(scope + '/hmn_b_1', b_1)
+        tf.summary.histogram(scope + '/hmn_w_1', w_1)
+        tf.summary.histogram(scope + '/hmn_w_d', w_d)
+        tf.summary.histogram(scope + '/hmn_w_3', w_3)
     
     # r is shape of (l)
     r = tf.tanh(tf.matmul(w_d, tf.concat([h_i, u_s_i, u_e_i], axis = 0)));
@@ -62,7 +63,13 @@ def HMN(U, h_i, u_s_i, u_e_i, doc_size, scope = None, FLAGS = None):
     m_3_2 = tf.add(tf.squeeze(m_3_1), B_3)
     m_3 = maxout(m_3_2, axis = 0)
     
-    tf.summary.histogram(scope + '/hmn_m_3', m_3)
+    if iter_number == 3:
+        tf.summary.histogram(scope + '/hmn_b_1', b_1)
+        tf.summary.histogram(scope + '/hmn_w_1', w_1)
+        tf.summary.histogram(scope + '/hmn_w_d', w_d)
+        tf.summary.histogram(scope + '/hmn_w_3', w_3)
+        tf.summary.histogram(scope + '/hmn_m_3', m_3)
+    
     return m_3
 
 
