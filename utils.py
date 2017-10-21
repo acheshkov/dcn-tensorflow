@@ -8,6 +8,7 @@ import re
 def get_scope_variable(scope_name, var, shape=None):
     with tf.variable_scope(scope_name) as scope:
         try:
+            #print('new var created')
             v = tf.get_variable(var, shape)
         except ValueError:
             scope.reuse_variables()

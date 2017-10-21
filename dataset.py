@@ -108,6 +108,7 @@ def getDataset(filenames, max_sequence_size = 1000):
     dataset = tf.contrib.data.TextLineDataset(filenames);
     dataset = dataset.skip(1)
     dataset = dataset.map(processLine(max_sequence_size))
-    #dataset = dataset.filter(lambda s,e,doc,que,doc_v,que_v: (s >= 0 ))
+    dataset = dataset.filter(lambda s,e,doc,que,doc_v,que_v: s >= 0 )
+    dataset = dataset.filter(lambda s,e,doc,que,doc_v,que_v: e < max_sequence_size - 1 )
     
     return dataset
