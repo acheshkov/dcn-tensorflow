@@ -36,7 +36,7 @@ def HMN(U, h_i, u_s_i, u_e_i, doc_size, scope = None, FLAGS = None, iter_number=
     B_3 = tf.reshape(tf.tile(b_3, [doc_size]), [maxout_pooling_size, doc_size])
     w_3 = ut.get_scope_variable(scope, 'hmn_w_3', [maxout_pooling_size, 1, 2 * lstm_size])
     
-    if iter_number == 3:
+    if iter_number == 4:
         tf.summary.histogram(scope + '/hmn_b_1', b_1)
         tf.summary.histogram(scope + '/hmn_w_1', w_1)
         tf.summary.histogram(scope + '/hmn_w_d', w_d)

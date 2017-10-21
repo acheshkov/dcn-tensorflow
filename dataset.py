@@ -66,7 +66,7 @@ def tokenize(sentence):
     decoded = sentence.decode()
     filtered = re.sub('[^ёa-яA-Яa-zA-Z0-9-_*.\s]', '', decoded)
     tokens = sentenceToTokens(filtered)
-    return np.array(list(map(lambda s: s.encode('utf-8'), tokens)))
+    return len(tokens), np.array(list(map(lambda s: s.encode('utf-8'), tokens)))
 
 # :: string -> [float]
 def word2vec(word):
@@ -90,16 +90,17 @@ def sentence2Vectors(sentence, max_sequence_size):
 def processLine(max_sequence_size):
     def _processLine(str):
         did,qid,doc,q,a = tf.decode_csv(str, [[0], [0], ["empty"], [""], [""]])
-        document = tf.py_func(tokenize, [doc], tf.string)
-        question = tf.py_func(tokenize, [q], tf.string)
-        answer = tf.py_func(tokenize, [a], tf.string)
+        dlen, document = tf.py_func(tokenize, [doc], (tf.int64, tf.string))
+        qlen, question = tf.py_func(tokenize, [q], (tf.int64, tf.string))
+        alen, answer = tf.py_func(tokenize, [a], (tf.int64, tf.string))
         #print(answer)
         start_pos, end_pos = tf.py_func(contains, [answer, document], (tf.int64, tf.int64))
         question_vec = tf.py_func(sentence2Vectors, [question, max_sequence_size], tf.float64)
         document_vec = tf.py_func(sentence2Vectors, [document, max_sequence_size], tf.float64)
         question_vec.set_shape([max_sequence_size, 300]);
         document_vec.set_shape([max_sequence_size, 300]);
-        return start_pos, end_pos, document, question, document_vec, question_vec
+        
+        return start_pos, end_pos, dlen, document, question, document_vec, question_vec
     return _processLine
 
      
@@ -108,7 +109,9 @@ def getDataset(filenames, max_sequence_size = 1000):
     dataset = tf.contrib.data.TextLineDataset(filenames);
     dataset = dataset.skip(1)
     dataset = dataset.map(processLine(max_sequence_size))
-    dataset = dataset.filter(lambda s,e,doc,que,doc_v,que_v: s >= 0 )
-    dataset = dataset.filter(lambda s,e,doc,que,doc_v,que_v: e < max_sequence_size - 1 )
+    dataset = dataset.filter(lambda s,e,dlen,doc,que,doc_v,que_v: s >= 0 )
+    dataset = dataset.filter(lambda s,e,dlen,doc,que,doc_v,que_v: dlen < max_sequence_size )
+    dataset = dataset.map(lambda s,e,dlen,doc,que,doc_v,que_v: (s, e, doc, que, doc_v, que_v))
+    #dataset = dataset.filter(lambda s,e,doc,que,doc_v,que_v: e < max_sequence_size - 1 )
     
     return dataset
