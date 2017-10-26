@@ -24,6 +24,14 @@ def non_linear_projection(x):
     return tf.add(tf.multiply(x, w), b)
 
 
+def make_h_param_string(lr, lstm_size, max_seq_len, maxout_pooling_size):
+    return ';'.join([
+        'LR=' + str(lr), 
+        'LSTM_S=' + str(lstm_size), 
+        'MAX_SL=' + str(max_seq_len), 
+        'MAXOUT=' + str(maxout_pooling_size) 
+    ])
+
 def normalize_answer(text):
     """Lower text and remove punctuation and extra whitespace."""
     return ' '.join(re.findall(r"\w+", text)).lower()
