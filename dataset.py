@@ -6,6 +6,7 @@ import string
 import random
 from gensim.models.wrappers import FastText
 from gensim.models.keyedvectors import KeyedVectors
+import sys
 
 #embeddings = FastText.load_fasttext_format('ru.bin')
 embeddings = KeyedVectors.load_word2vec_format('processed_ruscorpora_1_300_10.bin', binary=True)
@@ -24,9 +25,9 @@ def splitDataset(filename, pbs=(0.6, 0.2, 0.2)):
         if r < pbs[0]:
             f_train.write(line)
         elif r < pbs[0] + pbs[1]:
-            f_valid.write(line)
-        else:
             f_test.write(line)
+        else:
+            f_valid.write(line)
             
     fin.close()
     f_train.close()
@@ -138,6 +139,17 @@ def processLineV2(max_sequence_size):
         return start_pos, end_pos, document, question, document_vec, question_vec
     return _processLine
 
+# Parse line of preprocessed CSV dataset
+def processCSVLine(str, max_doc_length, max_que_length):
+    start_pos, end_pos, doc, que = str.split(';')
+    start_pos = int(start_pos)
+    end_pos = int(end_pos)
+    document = doc.split(' ')
+    question = que.split(' ')
+    doc_v = sentence2Vectors_onstring(document, max_doc_length)
+    que_v = sentence2Vectors_onstring(question, max_que_length)
+    return start_pos, end_pos, document, question, doc_v, que_v
+
 
 # :: string -> (int, int, [[string]], [[string]], [[double]], [[double]])
 def processLine(max_sequence_size):
@@ -180,4 +192,20 @@ def getDatasetV2(filenames, max_sequence_size = 1000):
     #dataset = dataset.map(lambda s,e,dlen,doc,que,doc_v,que_v: (s, e, doc, que, doc_v, que_v))
     #dataset = dataset.filter(lambda s,e,doc,que,doc_v,que_v: e < max_sequence_size - 1 )
     
+    return dataset
+
+# :: FileName -> Int -> Int -> Size -> [sample]
+def readDatasetToMemory(filename, max_sequence_length, max_question_length, size = -1):
+    dataset = []
+    with open(filename) as hfile:
+        for line in hfile:
+            #try:
+            start_true, end_true, doc, que, doc_v, que_v = processCSVLine(line, max_sequence_length, max_question_length)
+            dataset.append((start_true, end_true, doc, que, doc_v, que_v))
+            #except tf.errors.OutOfRangeError:
+            #    print("End of dataset")  # ==> "End of dataset"
+            #    break;
+            #except: 
+            #    print('Error read line', "skip");
+    print("Dataset Readed", sys.getsizeof(dataset))
     return dataset
