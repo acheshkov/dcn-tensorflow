@@ -2,6 +2,7 @@ import numpy as np
 import tensorflow as tf
 from collections import Counter
 import re
+from functools import reduce
 
 
 # get or create variable in scope
@@ -14,6 +15,17 @@ def get_scope_variable(scope_name, var, shape=None):
             scope.reuse_variables()
             v = tf.get_variable(var)
     return v
+
+# non-linear projection layer batched version
+def non_linear_projection_batch(x, shape_w, shape_b, batch_size):
+    scope = tf.get_variable_scope()
+    w = get_scope_variable(scope, 'p_w', shape_w)
+    b = get_scope_variable(scope, 'p_b', shape_b)
+    w = tf.reshape(w, [1] + shape_w)
+    w = tf.tile(w, [batch_size, 1, 1])
+    b = tf.reshape(b, [1] + shape_b)
+    b = tf.tile(b, [batch_size, 1, 1])
+    return tf.add(tf.matmul(w, x), b)
 
 
 # non-linear projection layer
@@ -67,6 +79,10 @@ def f1_score_int(s, e, s_true, e_true):
     recall = 1.0 * num_same / len(truth)
     f1 = (2 * precision * recall) / (precision + recall)
     return float(f1)
+
+def f1_score_int_avg(s, e, s_true, e_true):
+    l = list(map(lambda t: f1_score_int(t[0], t[1], t[2], t[3]), zip(s, e, s_true, e_true)))
+    return reduce(lambda x, y: x + y, l) / len(l)
 
 if __name__ == '__main__':
     with tf.Session() as sess:
