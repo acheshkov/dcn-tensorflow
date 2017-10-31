@@ -94,7 +94,7 @@ def trainStep(sess, feed_dict, writer,
     except:
         print("Train Error", feed_dict)
         
-    #print("--- Train step  %s seconds ---" % (time.time() - start_time))
+    print("--- Train step  %s seconds ---" % (time.time() - start_time))
     #if step % 25 == 0 : print(step, loss, start_true, end_true)
     #start_time = time.time()
     #if profiling: writer.add_run_metadata(run_metadata, 'step%d' % step)
