@@ -152,7 +152,7 @@ def processCSVLine(str, max_doc_length, max_que_length):
 
 
 # :: string -> (int, int, [[string]], [[string]], [[double]], [[double]])
-def processLine(max_sequence_size):
+def processLine(max_sequence_size, max_que_size):
     def _processLine(str):
         try:
             did,qid,doc,q,a = tf.decode_csv(str, [[0], [0], ["empty"], [""], [""]])
@@ -161,9 +161,9 @@ def processLine(max_sequence_size):
             alen, answer = tf.py_func(tokenize, [a], (tf.int64, tf.string), name="ans_tok")
             #print(answer)
             start_pos, end_pos = tf.py_func(contains, [answer, document], (tf.int64, tf.int64), name="contains")
-            question_vec = tf.py_func(sentence2Vectors, [question, max_sequence_size], tf.float64, name="que_sentence2Vectors")
+            question_vec = tf.py_func(sentence2Vectors, [question, max_que_size], tf.float64, name="que_sentence2Vectors")
             document_vec = tf.py_func(sentence2Vectors, [document, max_sequence_size], tf.float64, name="doc_sentence2Vectors")
-            question_vec.set_shape([max_sequence_size, 300]);
+            question_vec.set_shape([max_que_size, 300]);
             document_vec.set_shape([max_sequence_size, 300]);
         except:
             print('Error', str)
@@ -173,10 +173,10 @@ def processLine(max_sequence_size):
 
      
 
-def getDataset(filenames, max_sequence_size = 1000):
+def getDataset(filenames, max_sequence_size = 1000, max_que_size = 40):
     dataset = tf.contrib.data.TextLineDataset(filenames);
     dataset = dataset.skip(1)
-    dataset = dataset.map(processLine(max_sequence_size))
+    dataset = dataset.map(processLine(max_sequence_size, max_que_size))
     dataset = dataset.filter(lambda s,e,dlen,doc,que,doc_v,que_v: s >= 0 )
     dataset = dataset.filter(lambda s,e,dlen,doc,que,doc_v,que_v: dlen < max_sequence_size )
     dataset = dataset.map(lambda s,e,dlen,doc,que,doc_v,que_v: (s, e, doc, que, doc_v, que_v))
@@ -197,6 +197,7 @@ def getDatasetV2(filenames, max_sequence_size = 1000):
 # :: FileName -> Int -> Int -> Size -> [sample]
 def readDatasetToMemory(filename, max_sequence_length, max_question_length, size = -1):
     dataset = []
+    step = 0
     with open(filename) as hfile:
         for line in hfile:
             #try:
@@ -207,5 +208,7 @@ def readDatasetToMemory(filename, max_sequence_length, max_question_length, size
             #    break;
             #except: 
             #    print('Error read line', "skip");
-    print("Dataset Readed", sys.getsizeof(dataset))
+            step = step + 1
+            if size >=0 and step >= size: break
+    print("Dataset Readed", sys.getsizeof(dataset) / 1024, 'KB')
     return dataset
