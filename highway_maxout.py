@@ -20,10 +20,10 @@ Args:
 Returns:
     tensor of shape (batch, document_size) of scores
 '''
-def HMN_Batch(U, h_i, u_s_i, u_e_i, scope = None, FLAGS = None, dropout_rate = 1, iter_number=-1):
+def HMN_Batch(U, h_i, u_s_i, u_e_i, batch_size, scope = None, FLAGS = None, dropout_rate = 1, iter_number=-1):
     #U = tf.transpose(U_T)
     maxout_pooling_size = FLAGS.maxout_pooling_size
-    batch_size = FLAGS.train_batch_size
+    #batch_size = FLAGS.train_batch_size
     max_sequence_length = FLAGS.max_sequence_length
     lstm_size = FLAGS.lstm_size
     scope = scope or tf.get_variable_scope()

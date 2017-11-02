@@ -8,12 +8,12 @@ question_ph (batch, max_sequence_length, word_vector_size)
 document_size [batch_size]
 max_sequence_length scalar
 '''
-def encoderBatch(document_ph, question_ph, document_size, question_size, lstm, lstm_cenc_fw, lstm_cenc_bw, sentinel_d, sentinel_q, FLAGS):
+def encoderBatch(document_ph, question_ph, document_size, question_size, lstm, lstm_cenc_fw, lstm_cenc_bw, sentinel_d, sentinel_q, batch_size, FLAGS):
     
     lstm_size = FLAGS.lstm_size
     max_sequence_length = FLAGS.max_sequence_length
     max_question_length = FLAGS.max_question_length
-    batch_size = FLAGS.train_batch_size
+    #batch_size = FLAGS.train_batch_size
     
     '''
     transform tensor of shape [1, question_size, word_vector_size] to list of tensors of shape [1, word_vector_size]
@@ -86,7 +86,7 @@ def encoderBatch(document_ph, question_ph, document_size, question_size, lstm, l
             sequence_length = document_size + 1,
             dtype=tf.float32
         )
-        # we take first because of we feed to bi-RNN only one sentence
+
         # outputs_bi is (batch, D + 1, 2L)
         outputs_bi = tf.concat(outputs_bi, axis=2)
         #print(outputs_bi)
