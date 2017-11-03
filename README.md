@@ -12,5 +12,5 @@ My opinion that model is hard and long to train.
 ![Train and Test loss and accuracy for train dataset length of 20K ](loss_accuracy.png)
 
 
-[1] https://arxiv.org/abs/1611.01604
-[2] http://rusvectores.org/ru/models/
+* [1] https://arxiv.org/abs/1611.01604
+* [2] http://rusvectores.org/ru/models/
