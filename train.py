@@ -62,29 +62,15 @@ def accuracyTest(sess, params, writer, accuracy_avg, summary_op, summary_op_test
             (accuracy_avg, summary_op, summary_op_test, pr_start_idx, pr_end_idx),
             params
         )
-        #print('Predicted answer', utils.substr(doc, s, e))
-        #print('True answer', utils.substr(doc, start_true, end_true))
-        #writer.add_summary(stat,  step* 10 + step_accuracy_)
-        #print("acc", s, e, start_true, end_true)
-        #acc_accum += acc;
-        #print("acc:", acc, "Total:", acc_accum)
-
         writer.add_summary(stat_test,  step)
-        #writer.add_summary(stat,  step)
         print('AVG accuracy', acc)
     except: 
         print("Test Error", params)
-    #return stat_test
+
 
 def trainStep(sess, feed_dict, writer, 
               train_step, sum_loss, accuracy_avg, summary_op, 
               summary_op_train, step, profiling = False):
-    
-    #global last_avg_accuracy
-    #start_true, end_true, doc, que, doc_v, que_v = sess.run(next_element)
-    #if start_true < 0 or end_true > max_sequence_length - 1: 
-    #    print('Ignore step', start_true, end_true)
-    #    return
     
     run_options = None
     run_metadata = None
@@ -103,19 +89,12 @@ def trainStep(sess, feed_dict, writer,
     except:
         print("Train Error", step)
         
-    #print(step, "--- Train step  %s seconds ---" % (time.time() - start_time))
-    #if step % 25 == 0 : print(step, loss, start_true, end_true)
-    #start_time = time.time()
-    #if profiling: writer.add_run_metadata(run_metadata, 'step%d' % step)
-    #print("---State Writing  %s seconds ---" % (time.time() - start_time))
-    
-    #return stat, stat_train
 
 def loss_and_accuracy(start_true, end_true, batch_size, sum_start_scores, sum_end_scores, max_sequence_length):
     # loss and train step
     onehot_labels_start = tf.one_hot(start_true, max_sequence_length)
     onehot_labels_end   = tf.one_hot(end_true, max_sequence_length)
-    #print("sum_start_scores", sum_start_scores)
+
     with tf.name_scope('Loss'):
         loss_start = tf.nn.softmax_cross_entropy_with_logits(
             labels = onehot_labels_start,

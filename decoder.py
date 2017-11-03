@@ -6,7 +6,6 @@ import highway_maxout as hmn
 def decoderBatch(U, lstm_dec, dropout_rate, batch_size, FLAGS):
     max_sequence_length = FLAGS.max_sequence_length
     max_decoder_iterations = FLAGS.max_decoder_iterations
-    #batch_size = FLAGS.train_batch_size
     lstm_size = FLAGS.lstm_size
     
     with tf.name_scope('DYNAMIC_POINTING_DECODER'):
