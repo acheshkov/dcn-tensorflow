@@ -31,8 +31,8 @@ def processLineBatch(file, batch_size, max_sequence_length, max_question_length,
     batch_size_fact = 0;
     for line_ in next_n_lines:
         start_pos, end_pos, document, question, doc_v, que_v = processLine(line_, max_sequence_length, max_question_length)
-        if len(document) > max_sequence_length or start_pos < 0: 
-            print(step, "Wrong example. Skip", document[0])
+        if len(document) > max_sequence_length or  len(question) >= max_question_length or start_pos < 0: 
+            print("Wrong example. Skip", document[0])
             continue;
         q.append(que_v)
         d.append(doc_v)
