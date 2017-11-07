@@ -9,7 +9,7 @@ from gensim.models.keyedvectors import KeyedVectors
 import sys
 
 #embeddings = FastText.load_fasttext_format('ru.bin')
-embeddings = KeyedVectors.load_word2vec_format('processed_ruscorpora_1_300_10.bin', binary=True)
+#embeddings = KeyedVectors.load_word2vec_format('processed_ruscorpora_1_300_10.bin', binary=True)
 morph = pymorphy2.MorphAnalyzer()
 #filenames = ["./train_train_task_b.csv"]
 
@@ -212,3 +212,23 @@ def readDatasetToMemory(filename, max_sequence_length, max_question_length, size
             if size >=0 and step >= size: break
     print("Dataset Readed", sys.getsizeof(dataset) / 1024, 'KB')
     return dataset
+
+
+class Embeddings:
+    def __init__(self, embeddings_filename):
+        self.embeddings = KeyedVectors.load_word2vec_format(embeddings_filename, binary=True)
+        print("Embeddings are loaded to memory")
+    
+    def sentence2Vectors(self, sentence, max_sequence_size):
+        arr = np.array(list(map(lambda s: self.word2vec(s), sentence[0:max_sequence_size])))
+        l = len(sentence[0:max_sequence_size])
+        padded = np.pad(arr, ((0, max_sequence_size - l), (0, 0)), 'constant')
+        return padded
+    
+    def word2vec(self, word):
+        try:
+            res = np.array(self.embeddings[word], dtype=float)
+        except:
+            #print("err", word)
+            res = np.array([0.0 for x in range(0, 300)], dtype=float)
+        return res

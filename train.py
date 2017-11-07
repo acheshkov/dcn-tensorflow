@@ -6,18 +6,20 @@ import time
 import utils
 
 
-def processLine(str, max_doc_length, max_que_length):
+
+
+def processLine(embeddings, str, max_doc_length, max_que_length):
     start_pos, end_pos, doc, que = str.split(';')
     start_pos = int(start_pos)
     end_pos = int(end_pos)
     document = doc.split(' ')
     question = que.split(' ')
-    doc_v = ds.sentence2Vectors_onstring(document, max_doc_length)
-    que_v = ds.sentence2Vectors_onstring(question, max_que_length)
+    doc_v = embeddings.sentence2Vectors(document, max_doc_length)
+    que_v = embeddings.sentence2Vectors(question, max_que_length)
     return start_pos, end_pos, document, question, doc_v, que_v
 
 
-def processLineBatch(file, batch_size, max_sequence_length, max_question_length, 
+def processLineBatch(file, embeddings, batch_size, max_sequence_length, max_question_length, 
                      question_ph, document_ph, dropout_rate_ph,
                      doc_len_ph, que_len_ph, start_true_ph, end_true_ph, batch_size_ph, dropout_rate):
     next_n_lines = list(islice(file, batch_size))
@@ -30,7 +32,9 @@ def processLineBatch(file, batch_size, max_sequence_length, max_question_length,
     ql = []
     batch_size_fact = 0;
     for line_ in next_n_lines:
-        start_pos, end_pos, document, question, doc_v, que_v = processLine(line_, max_sequence_length, max_question_length)
+        start_pos, end_pos, document, question, doc_v, que_v = processLine(
+            embeddings, line_, max_sequence_length, max_question_length
+        )
         if len(document) > max_sequence_length or  len(question) >= max_question_length or start_pos < 0: 
             print("Wrong example. Skip", document[0])
             continue;
