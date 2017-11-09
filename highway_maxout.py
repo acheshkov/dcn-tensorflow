@@ -14,8 +14,8 @@ def maxout(input, axis):
 '''
 Args:
     U   is shape of (B, D, 2L)
-    h_i is shape of (B, L, 1)
-    u_s_i, u_e_i are shape of (B, 2L, 1)
+    h_i is shape of (B, L)
+    u_s_i, u_e_i are shape of (B, 2L)
 
 Returns:
     tensor of shape (batch, document_size) of scores
@@ -39,11 +39,11 @@ def HMN_Batch(U, h_i, u_s_i, u_e_i, batch_size, scope = None, FLAGS = None, drop
     B_3 = tf.tile(b_3, [batch_size,  max_sequence_length, 1])
     w_3 = ut.get_scope_variable(scope, 'hmn_w_3', [maxout_pooling_size, 2 * lstm_size])
     
-    if iter_number == 4:
-        tf.summary.histogram(scope + '/hmn_b_1', b_1)
-        tf.summary.histogram(scope + '/hmn_w_1', w_1)
-        tf.summary.histogram(scope + '/hmn_w_d', w_d)
-        tf.summary.histogram(scope + '/hmn_w_3', w_3)
+    #if iter_number == 4:
+    #    tf.summary.histogram(scope + '/hmn_b_1', b_1)
+    #    tf.summary.histogram(scope + '/hmn_w_1', w_1)
+    #    tf.summary.histogram(scope + '/hmn_w_d', w_d)
+    #    tf.summary.histogram(scope + '/hmn_w_3', w_3)
     
     # r is shape of (B, L)
     r = tf.tanh(tf.matmul(tf.concat([h_i, u_s_i, u_e_i], axis = 1), w_d));

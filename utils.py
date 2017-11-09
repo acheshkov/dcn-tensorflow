@@ -25,7 +25,7 @@ def non_linear_projection_batch(x, shape_w, shape_b, batch_size):
     w = tf.tile(w, [batch_size, 1, 1])
     b = tf.reshape(b, [1] + shape_b)
     b = tf.tile(b, [batch_size, 1, 1])
-    return tf.add(tf.matmul(w, x), b)
+    return tf.tanh(tf.add(tf.matmul(w, x), b))
 
 
 # non-linear projection layer
@@ -33,7 +33,7 @@ def non_linear_projection(x):
     scope = tf.get_variable_scope()
     w = get_scope_variable(scope, 'p_w', x.get_shape())
     b = get_scope_variable(scope, 'p_b', x.get_shape())
-    return tf.add(tf.multiply(x, w), b)
+    return tf.tanh(tf.add(tf.multiply(x, w), b))
 
 
 def make_h_param_string(lr, lstm_size, max_seq_len, maxout_pooling_size):
