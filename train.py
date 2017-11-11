@@ -21,7 +21,7 @@ def processLine(embeddings, str, max_doc_length, max_que_length):
 
 def processLineBatch(file, embeddings, batch_size, max_sequence_length, max_question_length, 
                      question_ph, document_ph, dropout_rate_ph,
-                     doc_len_ph, que_len_ph, start_true_ph, end_true_ph, batch_size_ph, dropout_rate):
+                     doc_len_ph, que_len_ph, start_true_ph, end_true_ph, batch_size_ph, learning_rate_ph, dropout_rate, lrate):
     next_n_lines = list(islice(file, batch_size))
     if not next_n_lines or len(next_n_lines) != batch_size: return None
     q = []
@@ -54,27 +54,28 @@ def processLineBatch(file, embeddings, batch_size, max_sequence_length, max_ques
         doc_len_ph: dl,
         que_len_ph: ql,
         dropout_rate_ph: dropout_rate,
-        batch_size_ph: batch_size_fact
+        batch_size_ph: batch_size_fact,
+        learning_rate_ph: lrate
         
     }
     if batch_size_fact != batch_size:  print("Batch Size Fact", batch_size_fact)
     return feed_dict
 
-def accuracyTest(sess, params, writer, accuracy_avg, summary_op, summary_op_test, pr_start_idx, pr_end_idx, step):
+def accuracyTest(sess, params, writer, accuracy_avg, summary_op, pr_start_idx, pr_end_idx, step):
     try:
-        acc, stat, stat_test, s, e = sess.run(
-            (accuracy_avg, summary_op, summary_op_test, pr_start_idx, pr_end_idx),
+        acc, stat, s, e = sess.run(
+            (accuracy_avg, summary_op, pr_start_idx, pr_end_idx),
             params
         )
-        writer.add_summary(stat_test,  step)
+        writer.add_summary(stat,  step)
         print('AVG accuracy', acc)
     except: 
         print("Test Error", params)
 
 
 def trainStep(sess, feed_dict, writer, 
-              train_step, sum_loss, accuracy_avg, summary_op, 
-              summary_op_train, step, profiling = False):
+              train_step, accuracy_avg, summary_op, 
+              step, profiling = False):
     
     run_options = None
     run_metadata = None
@@ -83,13 +84,13 @@ def trainStep(sess, feed_dict, writer,
         run_metadata = tf.RunMetadata()
     start_time = time.time()
     try:
-        _,loss, _, stat, stat_train = sess.run(
-            (train_step, sum_loss, accuracy_avg,  summary_op, summary_op_train),
+        _,loss, stat = sess.run(
+            (train_step, accuracy_avg,  summary_op),
             feed_dict = feed_dict,
             options=run_options, run_metadata=run_metadata
         )
         writer.add_summary(stat, step)
-        writer.add_summary(stat_train, step)
+        #writer.add_summary(stat_train, step)
     except:
         print("Train Error", step)
         

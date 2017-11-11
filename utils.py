@@ -36,12 +36,21 @@ def non_linear_projection(x):
     return tf.tanh(tf.add(tf.multiply(x, w), b))
 
 
-def make_h_param_string(lr, lstm_size, max_seq_len, maxout_pooling_size):
+def make_h_param_string(lr, lstm_size, max_seq_len, maxout_pooling_size, dataset_len, batch_size):
     return ';'.join([
         'LR=' + str(lr), 
         'LSTM_S=' + str(lstm_size), 
         'MAX_SL=' + str(max_seq_len), 
-        'MAXOUT=' + str(maxout_pooling_size) 
+        'MAXOUT=' + str(maxout_pooling_size),
+        'DS_LEN=' + str(dataset_len) ,
+        'BS=' + str(batch_size) 
+    ])
+
+def make_h_param_string_2(hparams):
+    return ';'.join([
+        'BS=' + str(hparams['batch_size']), 
+        'DRP=' + str(hparams['dropout_rate']),
+        'LR=' + str(hparams['learning_rate'])
     ])
 
 def normalize_answer(text):

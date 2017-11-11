@@ -3,10 +3,24 @@ import tensorflow as tf
 import highway_maxout as hmn
 
 
-def decoderBatch(U, lstm_dec, dropout_rate, batch_size, FLAGS):
+'''
+doc_length   is shape of [Batch]
+'''
+def decoderBatch(U, lstm_dec, dropout_rate, batch_size, doc_length, FLAGS):
     max_sequence_length = FLAGS.max_sequence_length
     max_decoder_iterations = FLAGS.max_decoder_iterations
     lstm_size = FLAGS.lstm_size
+    
+    # returns (batch, D)
+    def _maskToPreventIndexesOutOfLengthOfDoc(max_sequence_length, doc_length):
+        def createVector(max_sequence_length, l):
+            v = tf.ones(shape=[1,max_sequence_length - l], dtype=tf.float32) * (10 ** -30)
+            return tf.pad(v, [[0, 0], [l, 0]])
+                        
+        mask = tf.map_fn(lambda l: createVector(max_sequence_length, l), doc_length, dtype=tf.float32)
+        return tf.squeeze(mask)
+        
+    mask = _maskToPreventIndexesOutOfLengthOfDoc(max_sequence_length, doc_length)
     
     with tf.name_scope('DYNAMIC_POINTING_DECODER'):
         lstm_dec_state = lstm_dec.zero_state(batch_size, tf.float32)
@@ -26,6 +40,7 @@ def decoderBatch(U, lstm_dec, dropout_rate, batch_size, FLAGS):
                                                                                                     lstm_size,
                                                                                                     FLAGS,
                                                                                                     batch_size,
+                                                                                                    mask,
                                                                                                     i_)
             sum_start_scores = tf.add(sum_start_scores, scores_start)
             sum_end_scores   = tf.add(sum_start_scores, scores_end)
@@ -45,7 +60,7 @@ end_pos  [batch]
 new_lstm_state [batch, L, 1]
 # returns batched tuple (scores_start, scores_end, start_pos, end_pos, new_lstm_state)
 '''
-def decoderIteration(U, lstm_state, start_pos, end_pos, lstm_dec, dropout_rate, max_sequence_length, lstm_size, FLAGS, batch_size, iter_number):
+def decoderIteration(U, lstm_state, start_pos, end_pos, lstm_dec, dropout_rate, max_sequence_length, lstm_size, FLAGS, batch_size, mask, iter_number):
     # returns (batch, 2L)
     def _getPos(U, start_positions, rows_size, vec_size):
         def createMask(pos, size, vector):
@@ -61,6 +76,9 @@ def decoderIteration(U, lstm_state, start_pos, end_pos, lstm_dec, dropout_rate, 
         res.set_shape([None, vec_size])
         return res;
         
+    
+        
+    
     with tf.name_scope('Decoder_Iteration'):
         with tf.name_scope('Next_Start'):
 
@@ -74,6 +92,7 @@ def decoderIteration(U, lstm_state, start_pos, end_pos, lstm_dec, dropout_rate, 
                                 dropout_rate,
                                 iter_number)
 
+            scores_start = tf.add(scores_start, mask)
             new_start_pos = tf.to_int32(tf.argmax(scores_start, 1))
         with tf.name_scope('Next_End'):
             scores_end = hmn.HMN_Batch(U, 
@@ -85,6 +104,8 @@ def decoderIteration(U, lstm_state, start_pos, end_pos, lstm_dec, dropout_rate, 
                              FLAGS,
                              dropout_rate,
                              iter_number)
+            
+            scores_end = tf.add(scores_end, mask)
             new_end_pos = tf.to_int32(tf.argmax(scores_end, 1))
         
         with tf.name_scope('LSTM_State_Update'):
