@@ -76,7 +76,7 @@ def accuracy(sess, params, accuracy, pr_start_idx, pr_end_idx):
 
 
 def trainStep(sess, feed_dict, writer, 
-              train_step, accuracy_avg, summary_op, 
+              train_step, summary_op, 
               step, profiling = False):
     
     run_options = None
@@ -86,8 +86,8 @@ def trainStep(sess, feed_dict, writer,
         run_metadata = tf.RunMetadata()
     start_time = time.time()
     try:
-        _,loss, stat = sess.run(
-            (train_step, accuracy_avg,  summary_op),
+        _, stat = sess.run(
+            (train_step,  summary_op),
             feed_dict = feed_dict,
             options=run_options, run_metadata=run_metadata
         )

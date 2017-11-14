@@ -43,7 +43,7 @@ class ModelTrainer:
                              feed_dict, 
                              self.writer, 
                              self.train_step_op, 
-                             self.accuracy_avg_op, 
+                             #self.accuracy_avg_op, 
                              self.summary_op, 
                              #self.summary_op_train, 
                              step_, profiling=False)
