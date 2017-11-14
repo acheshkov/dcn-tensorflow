@@ -93,6 +93,10 @@ def f1_score_int_avg(s, e, s_true, e_true):
     l = list(map(lambda t: f1_score_int(t[0], t[1], t[2], t[3]), zip(s, e, s_true, e_true)))
     return reduce(lambda x, y: x + y, l) / len(l)
 
+def f1_score_int_list(s, e, s_true, e_true):
+    l = np.array(list(map(lambda t: f1_score_int(t[0], t[1], t[2], t[3]), zip(s, e, s_true, e_true))))
+    return l
+
 if __name__ == '__main__':
     with tf.Session() as sess:
         print('Hello')

@@ -61,14 +61,16 @@ def processLineBatch(file, embeddings, batch_size, max_sequence_length, max_ques
     if batch_size_fact != batch_size:  print("Batch Size Fact", batch_size_fact)
     return feed_dict
 
-def accuracyTest(sess, params, writer, accuracy_avg, summary_op, pr_start_idx, pr_end_idx, step):
+def accuracy(sess, params, accuracy, pr_start_idx, pr_end_idx):
     try:
-        acc, stat, s, e = sess.run(
-            (accuracy_avg, summary_op, pr_start_idx, pr_end_idx),
+        acc, starts, ends = sess.run(
+            (accuracy, pr_start_idx, pr_end_idx),
             params
         )
-        writer.add_summary(stat,  step)
-        print('AVG accuracy', acc)
+
+        return acc, starts, ends
+        #writer.add_summary(stat,  step)
+        #print('AVG accuracy', acc)
     except: 
         print("Test Error", params)
 
@@ -117,9 +119,10 @@ def loss_and_accuracy(start_true, end_true, batch_size, sum_start_scores, sum_en
             pr_end_idx = tf.to_int32(tf.argmax(sum_end_scores, 1))
 
         with tf.name_scope('Accuracy'):
-            accuracy_avg = tf.py_func(utils.f1_score_int_avg, [pr_start_idx, pr_end_idx, start_true, end_true], tf.float64)
+            #accuracy_avg = tf.py_func(utils.f1_score_int_avg, [pr_start_idx, pr_end_idx, start_true, end_true], tf.float64)
+            accuracy = tf.py_func(utils.f1_score_int_list, [pr_start_idx, pr_end_idx, start_true, end_true], tf.float64)
     
-    return sum_loss, accuracy_avg,pr_start_idx, pr_end_idx
+    return sum_loss, accuracy, pr_start_idx, pr_end_idx
 
 
     

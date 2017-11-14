@@ -4,6 +4,8 @@ import random
 import utils
 import dataset
 import train as tr
+from functools import reduce
+import random
 
 class ModelTrainer:
     def __init__(self, embeddings_file, log_path):
@@ -51,40 +53,38 @@ class ModelTrainer:
         
         return step_;
     
-    def accuracyTrain(self, hparams, filename, step, batch_size = 100000):
+    def accuracy(self, hparams, filename, step, length, postfix='default', batch_size = 100):
+        accuracy_list = []
+        processed_items = 0;
         with open(filename) as file:
-            test_params = tr.processLineBatch(file, self.embeddings, batch_size, 
-                                                  self.max_sequence_length, self.max_question_length, 
-                                                  self.question_ph, self.document_ph, self.dropout_rate_ph,
-                                                  self.doc_len_ph, self.que_len_ph, self.start_true_ph, self.end_true_ph,
-                                                  self.batch_size_ph,
-                                                  self.learning_rate_ph,
-                                                  1, 0)
-            tr.accuracyTest(self.session, 
-                            test_params, 
-                            self.writer, 
-                            self.accuracy_avg_op, 
-                            self.summary_op_train, 
-                            self.pr_start_idx_op, 
-                            self.pr_end_idx_op, step)
-        return 0;
-    
-    def accuracyValid(self, hparams, filename, step, batch_size = 100000):
-        with open(filename) as file:
-            test_params = tr.processLineBatch(file, self.embeddings, batch_size, 
-                                                  self.max_sequence_length, self.max_question_length, 
-                                                  self.question_ph, self.document_ph, self.dropout_rate_ph,
-                                                  self.doc_len_ph, self.que_len_ph, self.start_true_ph, self.end_true_ph,
-                                                  self.batch_size_ph,
-                                                  self.learning_rate_ph,
-                                                  1, 0)
-            tr.accuracyTest(self.session, 
-                            test_params, 
-                            self.writer, 
-                            self.accuracy_avg_op,  
-                            self.summary_op_test, 
-                            self.pr_start_idx_op, 
-                            self.pr_end_idx_op, step)
+            while True:
+                feed_dict = tr.processLineBatch(file, self.embeddings, batch_size, 
+                                                      self.max_sequence_length, self.max_question_length, 
+                                                      self.question_ph, self.document_ph, self.dropout_rate_ph,
+                                                      self.doc_len_ph, self.que_len_ph, self.start_true_ph, self.end_true_ph,
+                                                      self.batch_size_ph,
+                                                      self.learning_rate_ph,
+                                                      1, 0)
+                if feed_dict is None: break
+
+                accuracy, starts, ends = tr.accuracy(self.session, 
+                                feed_dict, 
+                                self.accuracy_op,
+                                self.pr_start_idx_op, 
+                                self.pr_end_idx_op)
+                #print(accuracy)
+                accuracy_list.extend(accuracy)
+                #print('2', accuracy_list)
+                processed_items += batch_size
+                if (processed_items >= length): break;
+           
+            avg = reduce(lambda x, y: x + y, accuracy_list) / len(accuracy_list)
+            summary = tf.Summary()
+            summary.value.add(tag='accuracy_' + postfix, simple_value = avg)
+            self.writer.add_summary(summary, step)
+            self.writer.flush()
+            #self.writer.add_summary(self.session.run(tf.summary.scalar('accuracy_', avg)))
+            
         return 0;
     
     def cross_validation_training(self, hparams, filename):
@@ -93,14 +93,14 @@ class ModelTrainer:
     def reset(self, hparams):
         h_param_str = utils.make_h_param_string_2(hparams)
         self.writer = tf.summary.FileWriter(self.log_path + "/" + str(self.n) + "-" + h_param_str, self.session.graph)
-        self.n = self.n +1
+        self.n = self.n + 1
         self.session.run(self.init_variables)
         return 0;
     
     def set_ops(self, ops):
         self.train_step_op = ops['train_step_op'] 
         self.sum_loss_op = ops['sum_loss_op'] 
-        self.accuracy_avg_op = ops['accuracy_avg_op']
+        self.accuracy_op = ops['accuracy_op']
         self.pr_start_idx_op = ops['pr_start_idx_op'] 
         self.pr_end_idx_op = ops['pr_end_idx_op']
         return 0
