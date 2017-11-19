@@ -125,4 +125,63 @@ def loss_and_accuracy(start_true, end_true, batch_size, sum_start_scores, sum_en
     return sum_loss, accuracy, pr_start_idx, pr_end_idx
 
 
+# iter_start_scores, iter_end_scores is shape of (B, D, number of iterations)
+def loss_and_accuracy_v2(start_true, end_true, batch_size, iter_start_scores, iter_end_scores, max_sequence_length, iter_num):
+    # loss and train step
+    onehot_labels_start = tf.one_hot(start_true, max_sequence_length)
+    onehot_labels_end   = tf.one_hot(end_true, max_sequence_length)
+    
+    def getIterNum(vec):
+        a = vec - tf.pad(vec[0:-1], [[0,1]])
+        b = tf.pad(vec[1:], [[0,1]])
+        c = tf.add(a,b)
+        d = tf.abs(tf.subtract(vec, c))
+        return tf.argmin(d)
+    
+    # m is (D, number of iterations)
+    #def sliceByEffectiveIter(m):
+    #    n = tf.cast(getIterNum(tf.argmax(m, 0)), tf.int32)
+    #    return m[0: , 0:n+1]
+    
+    # m is (D, number of iterations)
+    def leaveOnlyLastEffectiveIter(m):
+        n = tf.cast(getIterNum(tf.argmax(m, 0)), tf.int32)
+        return m[0: , n]
+    
+        
+    
+    onehot_labels_start = tf.tile(tf.expand_dims(onehot_labels_start, -1), [1, 1, iter_num])
+    onehot_labels_end   = tf.tile(tf.expand_dims(onehot_labels_end, -1), [1, 1, iter_num])
+    print("iter_end_scores", iter_end_scores)
+    print(onehot_labels_start)
+    print(onehot_labels_end)
+    start_scores = tf.map_fn(lambda m: leaveOnlyLastEffectiveIter(m), iter_start_scores, dtype=tf.float32)
+    end_scores = tf.map_fn(lambda m: leaveOnlyLastEffectiveIter(m), iter_end_scores, dtype=tf.float32)
+
+    with tf.name_scope('Loss'):
+        loss_start = tf.nn.softmax_cross_entropy_with_logits(
+            labels = onehot_labels_start,
+            logits = iter_start_scores,
+            dim = 1)
+        
+        loss_start = tf.reduce_mean(loss_start)
+        loss_end = tf.nn.softmax_cross_entropy_with_logits(
+            labels = onehot_labels_end,
+            logits = iter_end_scores,
+            dim = 1)
+        loss_end = tf.reduce_mean(loss_end)
+        sum_loss = loss_start + loss_end
+        
+    with tf.name_scope('Accuracy'):
+        with tf.name_scope('Prediction'):
+            pr_start_idx = tf.to_int32(tf.argmax(start_scores, 1))
+            pr_end_idx = tf.to_int32(tf.argmax(end_scores, 1))
+
+        with tf.name_scope('Accuracy'):
+            #accuracy_avg = tf.py_func(utils.f1_score_int_avg, [pr_start_idx, pr_end_idx, start_true, end_true], tf.float64)
+            accuracy = tf.py_func(utils.f1_score_int_list, [pr_start_idx, pr_end_idx, start_true, end_true], tf.float64)
+    
+    return sum_loss, accuracy, pr_start_idx, pr_end_idx
+
+
     

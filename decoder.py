@@ -26,8 +26,8 @@ def decoderBatch(U, lstm_dec, dropout_rate, batch_size, doc_length, FLAGS):
         lstm_dec_state = lstm_dec.zero_state(batch_size, tf.float32)
         start_pos = tf.zeros(shape=[batch_size], dtype=tf.int32)
         end_pos = tf.zeros(shape=[batch_size], dtype=tf.int32)
-        sum_start_scores = tf.zeros([batch_size, max_sequence_length])
-        sum_end_scores = tf.zeros([batch_size, max_sequence_length])
+        sum_start_scores = tf.zeros([batch_size, max_sequence_length, 1])
+        sum_end_scores = tf.zeros([batch_size, max_sequence_length, 1])
         
         for i_ in range(max_decoder_iterations):
             scores_start, scores_end, start_pos, end_pos, lstm_dec_state = decoderIteration(U, 
@@ -42,11 +42,13 @@ def decoderBatch(U, lstm_dec, dropout_rate, batch_size, doc_length, FLAGS):
                                                                                                     batch_size,
                                                                                                     mask,
                                                                                                     i_)
-            sum_start_scores = tf.add(sum_start_scores, scores_start)
-            sum_end_scores   = tf.add(sum_start_scores, scores_end)
+            #sum_start_scores = tf.add(sum_start_scores, scores_start)
+            #sum_end_scores   = tf.add(sum_start_scores, scores_end)
+            sum_start_scores = tf.concat([sum_start_scores, tf.expand_dims(scores_start, -1)], axis=2)
+            sum_end_scores   = tf.concat([sum_end_scores,   tf.expand_dims(scores_end, -1)],   axis=2)
             
-            
-    return sum_start_scores, sum_end_scores
+    # returns (B, D, number of iterations)        
+    return sum_start_scores[0:, 0:, 1: ], sum_end_scores[0:, 0:, 1: ]
     
     
     

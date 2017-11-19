@@ -8,8 +8,9 @@ from functools import reduce
 import random
 
 class ModelTrainer:
-    def __init__(self, embeddings_file, log_path):
+    def __init__(self, embeddings_file, log_path, name = ''):
         self.n = 1
+        self.name = name
         self.log_path = log_path
         self.session = tf.Session()
         self.summary_op_train = tf.summary.merge_all("TRAIN_STAT")
@@ -38,7 +39,7 @@ class ModelTrainer:
                                                 self.learning_rate_ph,
                                                 dropout, learning_rate)
                 if feed_dict is None: break
-                print("TRAIN STEP:", step_)
+                #print("TRAIN STEP:", step_)
                 tr.trainStep(self.session, 
                              feed_dict, 
                              self.writer, 
@@ -92,7 +93,9 @@ class ModelTrainer:
     
     def reset(self, hparams):
         h_param_str = utils.make_h_param_string_2(hparams)
-        self.writer = tf.summary.FileWriter(self.log_path + "/" + str(self.n) + "-" + h_param_str, self.session.graph)
+        self.writer = tf.summary.FileWriter(
+            self.log_path + "/" + str(self.n) + "-" + h_param_str + self.name, self.session.graph
+        )
         self.n = self.n + 1
         self.session.run(self.init_variables)
         return 0;
