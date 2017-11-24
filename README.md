@@ -6,6 +6,7 @@ I tried to apply it to question-answering problem for Russian language and repro
 
 For training i used emdeddings from RusVectōrēs [2]. I trained model using aws p2.xlarge instance.
 
+### Attempt to reproduce results from article
 
 ![My best attempt to reproduce results from article](loss_accuracy_en.png)
 
